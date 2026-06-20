@@ -781,25 +781,45 @@
         saveStockToDb(updated);
       };
 
+      // -- REFACTORED INVENTORY LOGIC HERE --
+      const INVENTORY_CATEGORY_MAP = {
+        coffin: 'coffins',
+        coffinHandles: 'handles',
+        wreathHolders: 'wreathHolders',
+        crucifix: 'crucifixes'
+      };
+
       const handleFieldChange = (fieldName, value) => {
         if (!formState) return;
         let updatedStock = { ...stockLevels };
         let stockChanged = false;
 
-        if (fieldName === 'coffin' || fieldName === 'coffinHandles' || fieldName === 'wreathHolders' || fieldName === 'crucifix') {
-          const cat = fieldName === 'coffin' ? 'coffins' : fieldName === 'coffinHandles' ? 'handles' : fieldName === 'wreathHolders' ? 'wreathHolders' : 'crucifixes';
+        const cat = INVENTORY_CATEGORY_MAP[fieldName];
+        
+        if (cat) {
           const oldVal = formState[fieldName] || "";
           const newVal = value || "";
           if (oldVal !== newVal) {
-            if (oldVal && updatedStock[cat][oldVal] !== undefined) { updatedStock[cat][oldVal] += 1; stockChanged = true; }
-            if (newVal && updatedStock[cat][newVal] !== undefined) { updatedStock[cat][newVal] = Math.max(0, updatedStock[cat][newVal] - 1); stockChanged = true; }
+            if (oldVal && updatedStock[cat][oldVal] !== undefined) { 
+              updatedStock[cat][oldVal] += 1; 
+              stockChanged = true; 
+            }
+            if (newVal && updatedStock[cat][newVal] !== undefined) { 
+              updatedStock[cat][newVal] = Math.max(0, updatedStock[cat][newVal] - 1); 
+              stockChanged = true; 
+            }
           }
         }
+        
         const updatedRecord = { ...formState, [fieldName]: value };
         setFormState(updatedRecord);
         saveCaseToDb(updatedRecord);
-        if (stockChanged) { setStockLevels(updatedStock); saveStockToDb(updatedStock); }
+        if (stockChanged) { 
+          setStockLevels(updatedStock); 
+          saveStockToDb(updatedStock); 
+        }
       };
+      // -- END REFACTORED LOGIC --
 
       const handleStatusChange = (newStatus) => {
         if (!formState || isLogisticsLocked) return;
