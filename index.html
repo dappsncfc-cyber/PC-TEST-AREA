@@ -26,6 +26,33 @@
     link.rel = 'manifest';
     link.href = manifestUrl;
     document.head.appendChild(link);
+
+    // DYNAMIC SERVICE WORKER INJECTION FOR PUSH NOTIFICATIONS
+    const swCode = `
+      self.addEventListener('push', function(event) {
+        const data = event.data ? event.data.json() : { title: 'ParlourCare Update', body: 'A case file was updated.' };
+        event.waitUntil(
+          self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M12 2L2 22h20L12 2z'/%3E%3C/svg%3E"
+          })
+        );
+      });
+      self.addEventListener('notificationclick', function(event) {
+        event.notification.close();
+        event.waitUntil(clients.matchAll({ type: 'window' }).then(clientsArr => {
+          if (clientsArr.length) return clientsArr[0].focus();
+          return clients.openWindow('/');
+        }));
+      });
+    `;
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(swBlob);
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Reg Failed', err));
+      });
+    }
   </script>
 
   <!-- Tailwind CSS Play CDN -->
@@ -368,11 +395,28 @@
       const [user, setUser] = useState(null);
       const seededRef = useRef(false);
 
+      const [pushEnabled, setPushEnabled] = useState(() => ('Notification' in window) && Notification.permission === 'granted');
       const [notifications, setNotifications] = useState([]);
       const [unreadCount, setUnreadCount] = useState(0);
       const [isNotificationTrayOpen, setIsNotificationTrayOpen] = useState(false);
       const prevListRef = useRef([]);
       const isFirstLoadRef = useRef(true);
+
+      const requestPushPermission = async () => {
+        if (!('Notification' in window)) {
+          showNotification("Unsupported", "Your device does not support Web Push Notifications.", "error");
+          return;
+        }
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            setPushEnabled(true);
+            showNotification("Alerts Enabled", "You will now receive native device notifications for updates.", "info");
+          } else {
+            showNotification("Alerts Denied", "You must allow notifications in your device settings.", "error");
+          }
+        } catch(e) { console.error(e); }
+      };
 
       const isLogisticsLocked = useMemo(() => {
         return formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
@@ -620,9 +664,24 @@
                   
                   return nextNotifs.slice(0, 20);
                 });
+
+                // OS SYSTEM PUSH NOTIFICATION TRIGGER
+                if ('Notification' in window && Notification.permission === 'granted') {
+                  navigator.serviceWorker.ready.then(reg => {
+                    const title = newNotifications.length === 1 ? newNotifications[0].title : `${newNotifications.length} File Updates`;
+                    const body = newNotifications.length === 1 ? newNotifications[0].message : 'Multiple case files have been modified by the team.';
+                    reg.showNotification(title, {
+                      body: body,
+                      icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M12 2L2 22h20L12 2z'/%3E%3C/svg%3E",
+                      tag: 'parlourcare-update',
+                      renotify: true
+                    });
+                  });
+                }
               }
+              prevListRef.current = cases;
             }
-            
+
             setDeceasedList(cases);
             prevListRef.current = cases;
             try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases)); } catch(e){}
@@ -1403,14 +1462,18 @@
                     <div className="absolute right-0 mt-3.5 w-80 bg-slate-950 border border-slate-800/80 rounded-2xl shadow-2xl p-4 z-50 animate-fade-in">
                       <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
                         <span className="text-xs font-black uppercase text-slate-255 tracking-wider">Live Activity Log</span>
-                        {notifications.length > 0 && (
-                          <button 
-                            onClick={() => setNotifications([])} 
-                            className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors"
-                          >
-                            Clear Feed
-                          </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {!pushEnabled && (
+                            <button onClick={requestPushPermission} className="text-[10px] text-amber-400 hover:text-amber-300 font-black uppercase tracking-wider transition-colors flex items-center gap-1 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
+                              <Icons.Bell size={10} /> Enable OS Push
+                            </button>
+                          )}
+                          {notifications.length > 0 && (
+                            <button onClick={() => setNotifications([])} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors">
+                              Clear Feed
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="max-h-60 overflow-y-auto scrollbar-none space-y-2.5">
                         {notifications.length === 0 ? (
