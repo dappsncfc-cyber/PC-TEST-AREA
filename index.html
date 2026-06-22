@@ -864,7 +864,11 @@
       const [hudFilter, setHudFilter] = useState("All");
       const [isQrModalOpen, setIsQrModalOpen] = useState(false);
       const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+      
+      // BUG FIX: Add closeDialog to the app context so buttons don't break when trying to open/close confirmation modals
       const [dialog, setDialog] = useState({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
+      const closeDialog = () => setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
+      
       const [user, setUser] = useState(null);
       const seededRef = useRef(false);
 
@@ -917,14 +921,18 @@
         };
       }, [deceasedList, activeBrand]);
 
+      // BUG FIX: Stock room updates were disappearing because the mapping was based purely on initialized stockLevels,
+      // which meant any new additions to the master appSettings didn't show up. It now iterates over the master list and falls back to 0.
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
-        const coffins = Object.entries(stockLevels.coffins || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "coffin", count: val }));
-        const handles = Object.entries(stockLevels.handles || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "handles", count: val }));
-        const wreathHolders = Object.entries(stockLevels.wreathHolders || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "wreathHolders", count: val }));
-        const crucifixes = Object.entries(stockLevels.crucifixes || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "crucifix", count: val }));
+        
+        const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
+        const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
+        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
+        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
+        
         return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
-      }, [stockLevels, stockSearchQuery]);
+      }, [stockLevels, stockSearchQuery, appSettings.lists]);
 
       useEffect(() => {
         if (!isFirebaseEnabled) return;
@@ -1142,15 +1150,22 @@
         if (isFirebaseEnabled && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
       };
 
+      // BUG FIX: Updated to properly deep-clone nested stock keys so React triggers a state render
       const deleteCaseFromDb = async (id) => {
         const deletedCase = deceasedList.find(item => item.id === id);
         if (deletedCase) {
-          let updatedStock = { ...stockLevels };
+          let updatedStock = { 
+            ...stockLevels,
+            coffins: { ...(stockLevels.coffins || {}) },
+            handles: { ...(stockLevels.handles || {}) },
+            wreathHolders: { ...(stockLevels.wreathHolders || {}) },
+            crucifixes: { ...(stockLevels.crucifixes || {}) }
+          };
           let changed = false;
-          if (deletedCase.coffin && updatedStock.coffins[deletedCase.coffin] !== undefined) { updatedStock.coffins[deletedCase.coffin] += 1; changed = true; }
-          if (deletedCase.coffinHandles && updatedStock.handles[deletedCase.coffinHandles] !== undefined) { updatedStock.handles[deletedCase.coffinHandles] += 1; changed = true; }
-          if (deletedCase.wreathHolders && updatedStock.wreathHolders[deletedCase.wreathHolders] !== undefined) { updatedStock.wreathHolders[deletedCase.wreathHolders] += 1; changed = true; }
-          if (deletedCase.crucifix && updatedStock.crucifixes[deletedCase.crucifix] !== undefined) { updatedStock.crucifixes[deletedCase.crucifix] += 1; changed = true; }
+          if (deletedCase.coffin) { updatedStock.coffins[deletedCase.coffin] = (updatedStock.coffins[deletedCase.coffin] || 0) + 1; changed = true; }
+          if (deletedCase.coffinHandles) { updatedStock.handles[deletedCase.coffinHandles] = (updatedStock.handles[deletedCase.coffinHandles] || 0) + 1; changed = true; }
+          if (deletedCase.wreathHolders) { updatedStock.wreathHolders[deletedCase.wreathHolders] = (updatedStock.wreathHolders[deletedCase.wreathHolders] || 0) + 1; changed = true; }
+          if (deletedCase.crucifix) { updatedStock.crucifixes[deletedCase.crucifix] = (updatedStock.crucifixes[deletedCase.crucifix] || 0) + 1; changed = true; }
           if (changed) { setStockLevels(updatedStock); saveStockToDb(updatedStock); }
         }
         setDeceasedList(prev => {
@@ -1161,8 +1176,15 @@
         if (isFirebaseEnabled && user) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
       };
 
+      // BUG FIX: Updated to properly deep-clone nested stock keys so React triggers a state render
       const handleStockLevelAdjust = (type, itemName, delta) => {
-        let updated = { ...stockLevels };
+        let updated = { 
+            ...stockLevels,
+            coffins: { ...(stockLevels.coffins || {}) },
+            handles: { ...(stockLevels.handles || {}) },
+            wreathHolders: { ...(stockLevels.wreathHolders || {}) },
+            crucifixes: { ...(stockLevels.crucifixes || {}) }
+        };
         if (type === 'coffin') updated.coffins[itemName] = Math.max(0, (updated.coffins[itemName] || 0) + delta);
         else if (type === 'handles') updated.handles[itemName] = Math.max(0, (updated.handles[itemName] || 0) + delta);
         else if (type === 'wreathHolders') updated.wreathHolders[itemName] = Math.max(0, (updated.wreathHolders[itemName] || 0) + delta);
@@ -1170,9 +1192,16 @@
         setStockLevels(updated); saveStockToDb(updated);
       };
 
+      // BUG FIX: Updated to properly deep-clone nested stock keys so React triggers a state render
       const handleFieldChange = (fieldName, value) => {
         if (!formState) return;
-        let updatedStock = { ...stockLevels };
+        let updatedStock = { 
+            ...stockLevels,
+            coffins: { ...(stockLevels.coffins || {}) },
+            handles: { ...(stockLevels.handles || {}) },
+            wreathHolders: { ...(stockLevels.wreathHolders || {}) },
+            crucifixes: { ...(stockLevels.crucifixes || {}) }
+        };
         let stockChanged = false;
         const catMap = { coffin: 'coffins', coffinHandles: 'handles', wreathHolders: 'wreathHolders', crucifix: 'crucifixes' };
         const cat = catMap[fieldName];
@@ -1180,8 +1209,8 @@
           const oldVal = formState[fieldName] || "";
           const newVal = value || "";
           if (oldVal !== newVal) {
-            if (oldVal && updatedStock[cat][oldVal] !== undefined) { updatedStock[cat][oldVal] += 1; stockChanged = true; }
-            if (newVal && updatedStock[cat][newVal] !== undefined) { updatedStock[cat][newVal] = Math.max(0, updatedStock[cat][newVal] - 1); stockChanged = true; }
+            if (oldVal) { updatedStock[cat][oldVal] = (updatedStock[cat][oldVal] || 0) + 1; stockChanged = true; }
+            if (newVal) { updatedStock[cat][newVal] = Math.max(0, (updatedStock[cat][newVal] || 0) - 1); stockChanged = true; }
           }
         }
         const updatedRecord = { ...formState, [fieldName]: value };
