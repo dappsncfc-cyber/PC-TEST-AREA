@@ -136,10 +136,10 @@
         locations: ["Cromer", "Fakenham"],
         conditions: ["Good", "Medium", "Poor"],
         infectionRisks: ["None", "Blood borne", "Sepsis", "CJD", "Other"],
-        coffins: ["Oak", "Elm", "Oak Dark Stained", "Knotty Oak", "Sapele", "Cardboard", "Seagrass", "Bamboo", "Wicker", "Willow Cromer", "Willow Pod", "Brinkley Oak", "Chiltern Oak", "Windsor Oak Triple", "Cavendish Oak", "Solid Pine", "Walnut", "Rockwood Elm", "Lamboard Oak", "Contemporary Coffin", "Painted Named Coffin", "Picture Coffin"],
-        handles: ["Bar Handles", "Ring Handles"],
+        coffins: ["Elm", "Rookwood Walnut", "Rookwood Elm", "Lamboard"],
+        handles: ["Bar Handles", "Ring Handles", "Wooden Handles"],
         wreathHolders: ["Brass Wreath Holders", "Chrome Wreath Holders"],
-        crucifixes: ["Brass Crucifix", "Chrome Crucifix", "Wooden Crucifix"],
+        crucifixes: ["Brass Crucifix", "Chrome Crucifix"],
         vehicles: ["C17 DFS", "C22 DFS", "C25 GFS"],
         hospitals: ["Norfolk & Norwich University Hospital (NNUH)", "Queen Elizabeth Hospital King's Lynn (QEH)", "James Paget University Hospital (JPUH)", "Cromer Hospital", "Hellesdon Hospital", "North Walsham War Memorial Hospital", "Kelling Hospital"],
         titles: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"]
@@ -149,14 +149,11 @@
 
     const initialInventory = {
       coffins: {
-        "Oak": 12, "Elm": 12, "Oak Dark Stained": 8, "Knotty Oak": 6, "Sapele": 10,
-        "Cardboard": 15, "Seagrass": 8, "Bamboo": 8, "Wicker": 8, "Willow Cromer": 4, "Willow Pod": 4,
-        "Brinkley Oak": 10, "Chiltern Oak": 14, "Windsor Oak Triple": 5, "Cavendish Oak": 5, "Solid Pine": 8,
-        "Walnut": 8, "Rockwood Elm": 8, "Lamboard Oak": 8, "Contemporary Coffin": 6, "Painted Named Coffin": 6, "Picture Coffin": 6
+        "Elm": 12, "Rookwood Walnut": 8, "Rookwood Elm": 8, "Lamboard": 8
       },
-      handles: { "Bar Handles": 45, "Ring Handles": 40 },
+      handles: { "Bar Handles": 45, "Ring Handles": 40, "Wooden Handles": 20 },
       wreathHolders: { "Brass Wreath Holders": 30, "Chrome Wreath Holders": 30 },
-      crucifixes: { "Brass Crucifix": 20, "Chrome Crucifix": 20, "Wooden Crucifix": 15 }
+      crucifixes: { "Brass Crucifix": 20, "Chrome Crucifix": 20 }
     };
 
     const myFirebaseConfig = {
@@ -395,7 +392,6 @@
       const [user, setUser] = useState(null);
       const seededRef = useRef(false);
 
-      const [pushEnabled, setPushEnabled] = useState(() => ('Notification' in window) && Notification.permission === 'granted');
       const [notifications, setNotifications] = useState([]);
       const [unreadCount, setUnreadCount] = useState(0);
       const [isNotificationTrayOpen, setIsNotificationTrayOpen] = useState(false);
@@ -705,7 +701,7 @@
           const record = deceasedList.find(d => d.id === pendingDeepLink);
           if (record) {
             setSelectedRowId(pendingDeepLink);
-            setActiveTab(record.isCoroner ? "pickup" : "care");
+            setActiveTab(record.isCoroner ? "pickup" : "hospital");
             setPendingDeepLink(null);
             try {
               const cleanUrl = getBaseUrl();
@@ -967,7 +963,7 @@
         setFormState(newCase);
         setSelectedRowId(nextId);
         setViewMode("cases");
-        setActiveTab(isCoronerCase ? "pickup" : "care");
+        setActiveTab(isCoronerCase ? "pickup" : "hospital");
       };
 
       const executeIframePrint = (htmlContent, isSticker = false) => {
@@ -1166,7 +1162,7 @@
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Transfer Type:</span> <strong>${record?.transferType || 'N/A'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Hospital:</span> <strong>${record?.transferHospital || 'N/A'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Pick-up Location:</span> <strong>${record?.transferHospital || 'N/A'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Scheduled Date & Time:</span> <strong>${record?.transferDateTime || 'PENDING'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Vehicle Assigned:</span> <strong>${record?.transferVehicle || 'N/A'}</strong></div>
             </div>
@@ -1266,7 +1262,7 @@
               <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
                 <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital Transfer Details & Logistics</div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Transfer Type:</span> <strong>${record.transferType || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Hospital:</span> <strong>${record.transferHospital || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Pick-up Location:</span> <strong>${record.transferHospital || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Scheduled Date:</span> <strong>${record.transferDateTime || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Fleet Vehicle:</span> <strong>${record.transferVehicle || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Staff:</span> <strong>${(record.transferStaff || []).join(', ') || 'PENDING'}</strong></div>
@@ -1811,7 +1807,7 @@
                               onClick={() => {
                                 setSelectedRowId(evt.caseId);
                                 setFormState(JSON.parse(JSON.stringify(evt.rawItem)));
-                                setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : "care");
+                                setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : (evt.rawItem.isCoroner ? "pickup" : "care"));
                               }}
                               className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${
                                 isPriority 
@@ -1895,7 +1891,7 @@
                           if (isCatherine && !item.isCoroner) return;
                           setSelectedRowId(item.id); 
                           setFormState(JSON.parse(JSON.stringify(item))); 
-                          setActiveTab(item.isCoroner ? "pickup" : "care"); 
+                          setActiveTab(item.isCoroner ? "pickup" : "hospital"); 
                         }}
                         className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${
                           isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'
@@ -2049,20 +2045,31 @@
                 <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
                   <Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard
                 </button>
-                <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
-                  <Icons.Users size={14} className="text-indigo-400" /> 1. Deceased Care
-                </button>
-                <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
-                  <Icons.Hammer size={14} className="text-indigo-400" /> 2. Coffin Workshop
-                </button>
-                {formState?.isCoroner && (
-                  <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
-                    <Icons.Mail size={14} className="text-indigo-400" /> 3. Coroner's Dispatch
-                  </button>
+                
+                {!formState?.isCoroner && (
+                  <>
+                    <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                      <Icons.Building2 size={14} className="text-indigo-400" /> 1. Hospital / House Pick-up
+                    </button>
+                    <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                      <Icons.Users size={14} className="text-indigo-400" /> 2. Deceased Care
+                    </button>
+                    <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                      <Icons.Hammer size={14} className="text-indigo-400" /> 3. Coffin Workshop
+                    </button>
+                  </>
                 )}
-                <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
-                  <Icons.Building2 size={14} className="text-indigo-400" /> {formState?.isCoroner ? "4. Hospital Transfer" : "3. Hospital Pick-up"}
-                </button>
+
+                {formState?.isCoroner && (
+                  <>
+                    <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                      <Icons.Mail size={14} className="text-indigo-400" /> 1. Coroner's Dispatch
+                    </button>
+                    <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                      <Icons.Building2 size={14} className="text-indigo-400" /> 2. Hospital Transfer
+                    </button>
+                  </>
+                )}
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20">
@@ -2525,11 +2532,8 @@
                                 </select>
                               </div>
                               <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Hospital</label>
-                                <select disabled={isLogisticsLocked} value={formState?.transferHospital || ''} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
-                                  <option value="">-- Select Hospital --</option>
-                                  {norfolkHospitals.map(hosp => <option key={hosp} value={hosp}>{hosp}</option>)}
-                                </select>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Pick-up Location</label>
+                                <input disabled={isLogisticsLocked} type="text" value={formState?.transferHospital || ''} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} placeholder="e.g. Hospital Ward or House Address" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
@@ -2583,55 +2587,73 @@
                       </div>
                       
                       <div className="mt-8 space-y-2.5 w-full">
-                        <button 
-                          type="button" 
-                          onClick={() => printCareDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Icons.Users size={14} className="text-amber-400" />
-                            Print Care Form (Tab 1)
-                          </span>
-                          <Icons.Printer size={12} className="text-slate-500" />
-                        </button>
+                        {!formState?.isCoroner && (
+                          <>
+                            <button 
+                              type="button" 
+                              onClick={() => printHospitalTransferDocument(formState)}
+                              className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icons.Building2 size={14} className="text-rose-400" />
+                                Print Hospital Pick-up (Tab 1)
+                              </span>
+                              <Icons.Printer size={12} className="text-slate-500" />
+                            </button>
 
-                        <button 
-                          type="button" 
-                          onClick={() => printWorkshopDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Icons.Hammer size={14} className="text-amber-400" />
-                            Print Workshop Spec (Tab 2)
-                          </span>
-                          <Icons.Printer size={12} className="text-slate-500" />
-                        </button>
+                            <button 
+                              type="button" 
+                              onClick={() => printCareDocument(formState)}
+                              className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icons.Users size={14} className="text-amber-400" />
+                                Print Care Form (Tab 2)
+                              </span>
+                              <Icons.Printer size={12} className="text-slate-500" />
+                            </button>
 
-                        {formState?.isCoroner && (
-                          <button 
-                            type="button" 
-                            onClick={() => printCoronerDocument(formState)}
-                            className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
-                          >
-                            <span className="flex items-center gap-2">
-                              <Icons.Truck size={14} className="text-rose-400" />
-                              Print Coroner Dispatch (Tab 3)
-                            </span>
-                            <Icons.Printer size={12} className="text-slate-500" />
-                          </button>
+                            <button 
+                              type="button" 
+                              onClick={() => printWorkshopDocument(formState)}
+                              className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icons.Hammer size={14} className="text-amber-400" />
+                                Print Workshop Spec (Tab 3)
+                              </span>
+                              <Icons.Printer size={12} className="text-slate-500" />
+                            </button>
+                          </>
                         )}
 
-                        <button 
-                          type="button" 
-                          onClick={() => printHospitalTransferDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-855 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Icons.Building2 size={14} className="text-rose-400" />
-                            Print Hospital Pick-up (Tab {formState?.isCoroner ? '4' : '3'})
-                          </span>
-                          <Icons.Printer size={12} className="text-slate-500" />
-                        </button>
+                        {formState?.isCoroner && (
+                          <>
+                            <button 
+                              type="button" 
+                              onClick={() => printCoronerDocument(formState)}
+                              className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icons.Truck size={14} className="text-rose-400" />
+                                Print Coroner Dispatch (Tab 1)
+                              </span>
+                              <Icons.Printer size={12} className="text-slate-500" />
+                            </button>
+
+                            <button 
+                              type="button" 
+                              onClick={() => printHospitalTransferDocument(formState)}
+                              className="w-full bg-slate-900 hover:bg-slate-855 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icons.Building2 size={14} className="text-rose-400" />
+                                Print Hospital Transfer (Tab 2)
+                              </span>
+                              <Icons.Printer size={12} className="text-slate-500" />
+                            </button>
+                          </>
+                        )}
 
                         <div className="pt-2 border-t border-slate-800/60">
                           <button 
