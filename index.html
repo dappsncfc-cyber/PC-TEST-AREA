@@ -203,7 +203,7 @@
     };
 
     // ============================================================================
-    // MODULE 3: PRINT ENGINE (Removes Duplicated HTML Wrappers)
+    // MODULE 3: PRINT ENGINE
     // ============================================================================
     const PrintEngine = {
       executeIframePrint(htmlContent, isSticker = false) {
@@ -281,14 +281,14 @@
 
       printCareDocument(record, themeName) {
         const infectionHtml = record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px;">🚨 BIO-HAZARD PROTOCOLS ACTIVE: ${record.infection.toUpperCase()}</div>` : '';
-        const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
+        const html = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
             ${this.getDocHeader(record, "Clinical Mortuary & Registration Record", themeName)}
             ${this.getRecordCard(record)}
             ${infectionHtml}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Anatomical & Care Status</div>
-              ${this.renderRow('Body Condition Score', record?.condition || 'Good')}
+              ${this.renderRow('Body Condition Score', record?.condition)}
               ${this.renderRow('Implants/Defibrillators', record?.devicesDetails || 'None Registered')}
               ${this.renderRow('Embalming Action', record?.embalmingDetails || 'None')}
               ${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}
@@ -302,24 +302,24 @@
               <div style="font-size: 13px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No personal effects logged.'}</div>
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Dressing & Viewings</div>
-              ${this.renderRow('Dressing Attire', record?.clothes || 'None Specified')}
-              ${this.renderRow('Family Viewing', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Key Milestones</div>
               ${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}
               ${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}
               ${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}
             </div>
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Dressing & Viewings</div>
+              ${this.renderRow('Dressing Attire', record?.clothes || 'None Specified')}
+              ${this.renderRow('Family Viewing', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}
+            </div>
           </div>
         `;
-        this.executeIframePrint(htmlContent);
+        this.executeIframePrint(html);
       },
 
       printWorkshopDocument(record, themeName) {
-        const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
+        const html = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
             ${this.getDocHeader(record, "Coffin Joinery & Workshop Specification", themeName)}
             ${this.getRecordCard(record)}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
@@ -334,69 +334,7 @@
             </div>
           </div>
         `;
-        this.executeIframePrint(htmlContent);
-      },
-
-      printCoronerDocument(record, themeName) {
-        if (!record?.isCoroner) return;
-        let timelineHtml = '';
-        if (record?.pickupStatusTimestamps) {
-          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
-        }
-        
-        let signatureHtml = '';
-        if (record?.coronerSignature) {
-          signatureHtml = `
-            <div style="display: flex; align-items: center; gap: 6px; margin-left: 15px; border-left: 2px solid #e2e8f0; padding-left: 15px;">
-              <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signed:</span>
-              <img src="${record.coronerSignature}" style="height: 65px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
-              <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-left: 5px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
-            </div>
-          `;
-        }
-
-        const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
-            ${this.getDocHeader(record, "Coroner's Removal Authority & Dispatch", themeName)}
-            ${this.getRecordCard(record)}
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>
-              ${this.renderRow('CAD Reference', record?.coronerRef || 'N/A')}
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;">
-                <span>Instructing Officer:</span> 
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <strong>${record?.coronerOfficer || 'N/A'}</strong>
-                  ${signatureHtml}
-                </div>
-              </div>
-            </div>
-
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Logistics & Dispatch</div>
-              ${this.renderRow('Target Destination', record?.pickupDestination || 'Cromer Mortuary')}
-              ${this.renderRow('Assigned Fleet Vehicle', record?.pickupVehicle || 'N/A')}
-              ${this.renderRow('Scheduled Date & Time', record?.pickupDateTime || 'PENDING')}
-              ${this.renderRow('Pick-up Address', record?.pickupLocation || 'PENDING')}
-              <div style="margin-top: 10px; font-size: 13px;">
-                <strong>Special Instructions:</strong><br/>
-                <span style="white-space: pre-wrap;">${record?.pickupInstructions || 'None'}</span>
-              </div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Assigned Staff</div>
-              ${this.renderRow('Crew Dispatched', (record?.pickupStaff || []).join(', ') || 'PENDING')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>
-              ${this.renderRow('Current Mission Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.pickupStatus}</strong>`, false)}
-              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;">
-                <div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>
-                ${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}
-              </div>
-            </div>
-          </div>
-        `;
-        this.executeIframePrint(htmlContent);
+        this.executeIframePrint(html);
       },
 
       printHospitalTransferDocument(record, themeName) {
@@ -405,8 +343,8 @@
         if (record?.transferStatusTimestamps) {
           Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
         }
-        const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
+        const html = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
             ${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}
             ${this.getRecordCard(record)}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
@@ -430,103 +368,68 @@
             </div>
           </div>
         `;
-        this.executeIframePrint(htmlContent);
+        this.executeIframePrint(html);
       },
 
-      printCombinedMasterDocument(record, themeName) {
+      printCoronerDocument(record, themeName) {
+        if (!record?.isCoroner) return;
         let timelineHtml = '';
         if (record?.pickupStatusTimestamps) {
-          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
+          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
         }
-        let transferTimelineHtml = '';
-        if (record?.transferStatusTimestamps) {
-          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { transferTimelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
+        
+        let signatureHtml = '';
+        if (record?.coronerSignature) {
+          signatureHtml = `
+            <div style="display: flex; align-items: center; gap: 6px; margin-left: 15px; border-left: 2px solid #e2e8f0; padding-left: 15px;">
+              <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signed:</span>
+              <img src="${record.coronerSignature}" style="height: 65px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
+              <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-left: 5px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
+            </div>
+          `;
         }
-        const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.4;">
-            ${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)", themeName || "ParlourCare")}
+
+        const html = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
+            ${this.getDocHeader(record, "Coroner's Removal Authority & Dispatch", themeName)}
             ${this.getRecordCard(record)}
-            ${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}</div>` : ''}
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Body Condition:</span> <strong>${record?.condition || 'Good'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Defibrillators/Pacemaker:</span> <strong>${record?.devicesDetails || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Green Form Filed:</span> <strong>${record?.greenCoroner || 'No'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Embalming Logs:</span> <strong>${record?.embalmingDetails || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Key Milestone Date:</span> <strong>${record?.keyDate || 'Pending'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Milestone Action:</span> <strong>${record?.keyMilestoneName || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Milestone Urgency:</span> <strong>${record?.keyMilestoneUrgency || 'None'}</strong></div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div>
-              <div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div>
-              <div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div>
-            </div>
-            <div style="page-break-before: always; margin-top: 40px;"></div>
-            ${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2", themeName || "ParlourCare")}
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Handles Selected:</span> <strong>${record?.coffinHandles || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Wreath Holders:</span> <strong>${record?.wreathHolders || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Crucifix:</span> <strong>${record?.crucifix || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coffin Size:</span> <strong>${record?.bodySize || 'PENDING SPEC'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Engraved Plate Affixed:</span> <strong>${record?.plate || 'No'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Grave Marker:</span> <strong>${record?.graveMarker || 'None'}</strong></div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Dressing Apparel:</span> <strong>${record?.clothes || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Family Viewing Status:</span> <strong>${record?.viewing === 'Yes' ? 'CONFIRMED' : record?.viewing === 'No' ? 'DECLINED' : 'REQUESTED'}</strong></div>
-            </div>
-            ${record?.isCoroner ? `
-              <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>CAD Ref:</span> <strong>${record.coronerRef || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;">
-                  <span>Coroner Officer:</span> 
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <strong>${record.coronerOfficer || 'N/A'}</strong>
-                    ${record.coronerSignature ? `
-                      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px; border-left: 2px solid #e2e8f0; padding-left: 10px;">
-                        <span style="font-size: 10px; color: #64748b; font-weight: bold;">Signed:</span>
-                        <img src="${record.coronerSignature}" style="height: 45px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
-                        <span style="font-size: 10px; color: #64748b; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
-                      </div>
-                    ` : ''}
-                  </div>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Target Destination:</span> <strong>${record.pickupDestination || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Fleet Vehicle:</span> <strong>${record.pickupVehicle || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Scheduled Date:</span> <strong>${record.pickupDateTime || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Pick-up Address:</span> <strong>${record.pickupLocation || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Special Instructions:</span> <strong>${record.pickupInstructions || 'None'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Stage Status:</span> <strong>${record.pickupStatus || 'N/A'}</strong></div>
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
-                  <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
-                  ${timelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>
+              ${this.renderRow('CAD Reference', record?.coronerRef || 'N/A')}
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;">
+                <span>Instructing Officer:</span> 
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <strong>${record?.coronerOfficer || 'N/A'}</strong>
+                  ${signatureHtml}
                 </div>
               </div>
-            ` : ''}
-              <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital Transfer Details & Logistics</div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Transfer Type:</span> <strong>${record.transferType || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Pick-up Location:</span> <strong>${record.transferHospital || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Scheduled Date:</span> <strong>${record.transferDateTime || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Vehicle Assigned:</span> <strong>${record.transferVehicle || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Staff:</span> <strong>${(record.transferStaff || []).join(', ') || 'PENDING'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Transfer Stage:</span> <strong>${record.transferStatus || 'Pending'}</strong></div>
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
-                  <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
-                  ${transferTimelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
-                </div>
+            </div>
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Logistics & Dispatch</div>
+              ${this.renderRow('Target Destination', record?.pickupDestination || 'Cromer')}
+              ${this.renderRow('Scheduled Date & Time', record?.pickupDateTime || 'PENDING')}
+              ${this.renderRow('Pick-up Address', record?.pickupLocation || 'PENDING')}
+              ${this.renderRow('Assigned Fleet Vehicle', record?.pickupVehicle || 'N/A')}
+              <div style="margin-top: 10px; font-size: 13px;">
+                <strong>Special Instructions:</strong><br/>
+                <span style="white-space: pre-wrap;">${record?.pickupInstructions || 'None'}</span>
               </div>
+            </div>
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew</div>
+              ${this.renderRow('Crew Dispatched', (record?.pickupStaff || []).join(', ') || 'PENDING')}
+            </div>
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>
+              ${this.renderRow('Current Mission Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.pickupStatus}</strong>`, false)}
+              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;">
+                <div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>
+                ${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}
+              </div>
+            </div>
           </div>
         `;
-        this.executeIframePrint(htmlContent);
+        this.executeIframePrint(html);
       },
 
       printStickerAndCheckBlocks(record) {
@@ -747,7 +650,7 @@
     }
 
     // ============================================================================
-    // MODULE 5: FEATURE VIEWS (Isolated specific feature blocks)
+    // MODULE 5: FEATURE VIEWS
     // ============================================================================
     function AuthScreen({ onLogin }) {
       const [username, setUsername] = useState('adrian');
@@ -963,7 +866,6 @@
       const [hudFilter, setHudFilter] = useState("All");
       const [isQrModalOpen, setIsQrModalOpen] = useState(false);
       const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-      
       const [dialog, setDialog] = useState({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       const closeDialog = () => setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       
@@ -1021,12 +923,10 @@
 
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
-        
         const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
         const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
         const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
         const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
-        
         return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
       }, [stockLevels, stockSearchQuery, appSettings.lists]);
 
@@ -1186,18 +1086,30 @@
         }
       }, [pendingDeepLink, deceasedList]);
 
+      // CRASH PROOF ARRAY EXTRACTORS (Safeguards against corrupt undefined/null local storage states)
+      const getSafeArray = (arr, fallback) => Array.isArray(arr) ? arr : (Array.isArray(fallback) ? fallback : []);
+
       const labels = appSettings.labels || defaultAppSettings.labels;
-      const locations = appSettings.lists?.locations || defaultAppSettings.lists.locations;
-      const conditions = appSettings.lists?.conditions || defaultAppSettings.lists.conditions;
-      const infectionRisks = appSettings.lists?.infectionRisks || defaultAppSettings.lists.infectionRisks;
+      const locations = getSafeArray(appSettings.lists?.locations, defaultAppSettings.lists.locations);
+      const conditions = getSafeArray(appSettings.lists?.conditions, defaultAppSettings.lists.conditions);
+      const infectionRisks = getSafeArray(appSettings.lists?.infectionRisks, defaultAppSettings.lists.infectionRisks);
       const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
-      const coffinsList = appSettings.lists?.coffins || defaultAppSettings.lists.coffins;
-      const handlesList = appSettings.lists?.handles || defaultAppSettings.lists.handles;
-      const wreathHoldersList = appSettings.lists?.wreathHolders || defaultAppSettings.lists.wreathHolders;
-      const crucifixesList = appSettings.lists?.crucifixes || defaultAppSettings.lists.crucifixes;
-      const titles = appSettings.lists?.titles || defaultAppSettings.lists.titles;
-      const vehicleOptions = appSettings.lists?.vehicles || defaultAppSettings.lists.vehicles;
-      const customFields = appSettings.customFields || [];
+      const coffinsList = getSafeArray(appSettings.lists?.coffins, defaultAppSettings.lists.coffins);
+      const handlesList = getSafeArray(appSettings.lists?.handles, defaultAppSettings.lists.handles);
+      const wreathHoldersList = getSafeArray(appSettings.lists?.wreathHolders, defaultAppSettings.lists.wreathHolders);
+      const crucifixesList = getSafeArray(appSettings.lists?.crucifixes, defaultAppSettings.lists.crucifixes);
+      const titles = getSafeArray(appSettings.lists?.titles, defaultAppSettings.lists.titles);
+      const vehiclesArray = getSafeArray(appSettings.lists?.vehicles, defaultAppSettings.lists.vehicles);
+      const hospitalsArray = getSafeArray(appSettings.lists?.hospitals, defaultAppSettings.lists.hospitals);
+      const customFields = getSafeArray(appSettings.customFields, []);
+
+      // SAFELY COMPILED DROPDOWN OPTIONS (Prevents "...undefined is not iterable" crash)
+      const hospitalOptions = [{value: '', label: '-- Select Hospital --'}].concat(hospitalsArray);
+      const vehicleOptionsDropdown = [{value: '', label: '-- Select Vehicle --'}].concat(vehiclesArray);
+      
+      const transferTypeOptions = [{value:'', label:'-- Select Type --'}, {value:'Pick up', label:'Pick up'}];
+      if (formState?.isCoroner) transferTypeOptions.push({value:'Drop off', label:'Drop off'});
+
 
       // HELPER: App Logic Functions
       const saveSettingsToDb = async (newSettings) => {
@@ -1333,23 +1245,15 @@
         if (selectedRowId === id && formState) setFormState(prev => ({ ...prev, isArchived: !item.isArchived }));
       };
 
-      const handleStaffToggle = (staffName) => {
+      const handleStaffToggle = (staffName, isTransfer = false) => {
         if (!formState) return;
-        let updatedStaff = [...(formState.pickupStaff || [])];
+        const key = isTransfer ? 'transferStaff' : 'pickupStaff';
+        const keyEmail = isTransfer ? 'transferStaffEmails' : 'pickupStaffEmails';
+        let updatedStaff = [...(formState[key] || [])];
         if (updatedStaff.includes(staffName)) updatedStaff = updatedStaff.filter(s => s !== staffName);
         else updatedStaff.push(staffName);
         const emails = norfolkStaffList.filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian"))).map(s => s.email).join(', ');
-        const updatedRecord = { ...formState, pickupStaff: updatedStaff, pickupStaffEmails: emails };
-        setFormState(updatedRecord); saveCaseToDb(updatedRecord);
-      };
-      
-      const handleTransferStaffToggle = (staffName) => {
-        if (!formState) return;
-        let updatedStaff = [...(formState.transferStaff || [])];
-        if (updatedStaff.includes(staffName)) updatedStaff = updatedStaff.filter(s => s !== staffName);
-        else updatedStaff.push(staffName);
-        const emails = norfolkStaffList.filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian"))).map(s => s.email).join(', ');
-        const updatedRecord = { ...formState, transferStaff: updatedStaff, transferStaffEmails: emails };
+        const updatedRecord = { ...formState, [key]: updatedStaff, [keyEmail]: emails };
         setFormState(updatedRecord); saveCaseToDb(updatedRecord);
       };
 
@@ -1807,7 +1711,7 @@
                               </div>
                               <div className="space-y-4">
                                 <FormSelect disabled={isLogisticsLocked} label={labels.pickupDestination} value={formState?.pickupDestination} onChange={(val) => handleFieldChange('pickupDestination', val)} options={["Cromer Mortuary", "Fakenham Mortuary"]} />
-                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.pickupVehicle} onChange={(val) => handleFieldChange('pickupVehicle', val)} options={vehicleOptions} />
+                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.pickupVehicle} onChange={(val) => handleFieldChange('pickupVehicle', val)} options={vehicleOptionsDropdown} />
                                 <FormInput disabled={isLogisticsLocked} label="Scheduled Date & Time" value={formState?.pickupDateTime} onChange={(val) => handleFieldChange('pickupDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
                               </div>
                             </div>
@@ -1870,9 +1774,15 @@
                                 </div>
                               </div>
                               <div className="space-y-4">
-                                <FormSelect disabled={isLogisticsLocked} label="Transfer Type" value={formState?.transferType} onChange={(val) => handleFieldChange('transferType', val)} options={[{value:'',label:'-- Select Type --'}, "Pick up", ...(formState?.isCoroner ? ["Drop off"] : [])]} />
-                                <FormInput disabled={isLogisticsLocked} label="Pick-up Location" value={formState?.transferHospital} onChange={(val) => handleFieldChange('transferHospital', val)} placeholder="e.g. Hospital Ward or House Address" />
-                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.transferVehicle} onChange={(val) => handleFieldChange('transferVehicle', val)} options={[{value:'',label:'-- Select Vehicle --'}, ...vehicleOptions]} />
+                                <FormSelect disabled={isLogisticsLocked} label="Transfer Type" value={formState?.transferType} onChange={(val) => handleFieldChange('transferType', val)} options={transferTypeOptions} />
+                                
+                                {formState?.isCoroner ? (
+                                  <FormSelect disabled={isLogisticsLocked} label="Pick-up/Drop-off Location" value={formState?.transferHospital} onChange={(val) => handleFieldChange('transferHospital', val)} options={hospitalOptions} />
+                                ) : (
+                                  <FormInput disabled={isLogisticsLocked} label="Pick-up / Home Location" value={formState?.transferHospital} onChange={(val) => handleFieldChange('transferHospital', val)} placeholder="e.g. Hospital Ward or House Address" />
+                                )}
+
+                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.transferVehicle} onChange={(val) => handleFieldChange('transferVehicle', val)} options={vehicleOptionsDropdown} />
                                 <FormInput disabled={isLogisticsLocked} label="Scheduled Date & Time" value={formState?.transferDateTime} onChange={(val) => handleFieldChange('transferDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
                               </div>
                             </div>
@@ -1882,7 +1792,7 @@
                                 {norfolkStaffList.map((staff) => {
                                   const isChecked = (formState?.transferStaff || []).includes(staff.name);
                                   return (
-                                    <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
+                                    <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name, true)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
                                       {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}<div className="text-xs font-bold">{staff.name}</div>
                                     </div>
                                   );
@@ -1906,7 +1816,7 @@
                         <div className="mt-8 space-y-2.5 w-full">
                           {!formState?.isCoroner && (
                             <>
-                              <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital / Home Pick-up (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Pick-up (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
                               <button type="button" onClick={() => PrintEngine.printCareDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Users size={14} className="text-amber-400" /> Print Care Form (Tab 2)</span><Icons.Printer size={12} className="text-slate-500" /></button>
                               <button type="button" onClick={() => PrintEngine.printWorkshopDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Hammer size={14} className="text-amber-400" /> Print Workshop Spec (Tab 3)</span><Icons.Printer size={12} className="text-slate-500" /></button>
                             </>
