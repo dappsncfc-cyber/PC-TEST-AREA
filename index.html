@@ -1014,7 +1014,9 @@
         return deceasedList.filter(item => {
           if (isDavid) {
               const isTransferCompleted = item.transferStatus === 'Completed' && item.transferType === 'Pick up';
-              if (!item.isCoroner || item.isConverted || isTransferCompleted) return false;
+              const isActiveCoroner = item.isCoroner && !item.isConverted && !isTransferCompleted;
+              const isActiveTransfer = (item.transferType === 'Pick up' || item.transferType === 'Drop off' || !!item.transferDateTime) && item.transferStatus !== 'Completed';
+              if (!isActiveCoroner && !isActiveTransfer) return false;
           }
           const matchSearch = (item.deceasedName || "").toLowerCase().includes(searchQuery.toLowerCase()) || (item.ref || "").toLowerCase().includes(searchQuery.toLowerCase());
           let matchLoc = true;
@@ -1589,6 +1591,13 @@
                     else if (activeBrand === "gowards") matchLoc = item.location === "Fakenham";
                     if (!matchLoc) return;
 
+                    if (isDavid) {
+                      const isTransferCompleted = item.transferStatus === 'Completed' && item.transferType === 'Pick up';
+                      const isActiveCoroner = item.isCoroner && !item.isConverted && !isTransferCompleted;
+                      const isActiveTransfer = (item.transferType === 'Pick up' || item.transferType === 'Drop off' || !!item.transferDateTime) && item.transferStatus !== 'Completed';
+                      if (!isActiveCoroner && !isActiveTransfer) return;
+                    }
+
                     if (item.isCoroner && !item.isConverted && item.pickupStatus !== 'Collected') {
                       const id = `${item.id}-pickup`;
                       todayEventsMap.set(id, { id, caseId: item.id, rawItem: item, time: item.pickupDateTime || 'Unscheduled', type: 'CORONER_DISPATCH', title: `⚖️ PRIORITISED CORONER DISPATCH: ${item.title} ${item.deceasedName || 'Unnamed Case'}`, detail: `From: ${item.pickupLocation || 'Pending Address'} → Target: ${item.pickupDestination}`, crew: item.pickupStaff || [], vehicle: item.pickupVehicle, status: item.pickupStatus || 'Pending', ref: item.ref });
@@ -1657,7 +1666,7 @@
                       const isTransferCompleted = item.isCoroner && item.transferStatus === 'Completed' && item.transferType === 'Pick up';
                       const showAsCoroner = item.isCoroner && !isTransferCompleted && !item.isConverted;
                       return (
-                        <div key={item.id} onClick={() => { if ((isCatherine || isDavid) && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.isConverted ? "pickup" : "hospital"); setIsCustomTransferLoc(false); setIsCustomCoffin(item.coffin && !coffinsList.includes(item.coffin)); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${(isCatherine || isDavid) && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
+                        <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.isConverted ? "pickup" : "hospital"); setIsCustomTransferLoc(false); setIsCustomCoffin(item.coffin && !coffinsList.includes(item.coffin)); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex flex-wrap gap-1.5 items-center">
                               <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
